@@ -5,9 +5,11 @@ const mailgun = new Mailgun(formData)
 const createToken = require('./token')
 
 functions.http('verify_email', async (req, res) => {
-  const username = Buffer.from(req.body.message.data, 'base64').toString(
+  const data = Buffer.from(req.body.message.data, 'base64').toString(
     'utf-8'
   )
+  const username = JSON.parse(data).username
+  const baseUrl = JSON.parse(data).url
   const DOMAIN = process.env.MAILGUN_DOMAIN
   const mg = mailgun.client({
     key: process.env.MAILGUN_API_KEY,
@@ -21,7 +23,7 @@ functions.http('verify_email', async (req, res) => {
       subject: 'Email Verification',
       template: 'Email-Verify',
       'h:X-Mailgun-Variables': JSON.stringify({
-        url: process.env.URL + '/' + token,
+        url: baseUrl + '/' + token,
       }),
     }
     await mg.messages.create(DOMAIN, data)
